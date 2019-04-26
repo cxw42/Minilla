@@ -29,15 +29,32 @@ sub run {
             : ($project->config->{release}->{pause_config}) ? $project->config->{release}->{pause_config}
             :                                                 undef;
         my $config = CPAN::Uploader->read_config_file($pause_config);
+
+        if(!$config->{password}) {  # Prompt for password if not in .pause
+            die <<EOF unless eval { require Term::ReadKey; 1 };
+Your password is not in the ~/.pause file, and I can't prompt you for it.
+Please install the Term::ReadKey module and try again.
+EOF
+            # Prompt for the password.
+            # The following is from CPAN-Uploader's cpan-upload script.
+            local $| = 1;
+            print "PAUSE Password: ";
+            Term::ReadKey::ReadMode('noecho');
+            $config->{password} = <STDIN>;
+            chomp $config->{password} if defined $config->{password};
+            Term::ReadKey::ReadMode('restore');
+            print "\n";
+        }
+
         if (!$config || !$config->{user} || !$config->{password}) {
             die <<EOF
 
-Missing ~/.pause file or your ~/.pause file is wrong.
+I need a PAUSE username and password.
+Perhaps a missing ~/.pause file or your ~/.pause file is wrong?
 You should put ~/.pause file in following format.
 
     user {{YOUR_PAUSE_ID}}
     password {{YOUR_PAUSE_PASSWORD}}
-
 
 EOF
         }

@@ -36,6 +36,9 @@ requires 'Term::ANSIColor';
 requires 'Module::Runtime';
 requires 'URI';
 
+# Optional utilities
+recommends 'Term::ReadKey' => 2.34;     # To prompt for password
+
 # Modules required by minil new/minil dist/minil release are optional.
 # It's good for contributors
 recommends 'Version::Next';
