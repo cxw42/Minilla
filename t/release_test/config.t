@@ -49,6 +49,49 @@ MinimumVersion = false
     };
 };
 
+subtest 'release.changes_datetime_format' => sub {
+
+    my $datetime_regex = qr/^(?:\S+\h+)?not a datetime/m;
+
+    subtest 'custom format' => sub {
+        my $guard = pushd(tempdir(CLEANUP => 1));
+
+        my $project = create_project();
+
+        spew('minil.toml', <<'...');
+name = "Acme-Foo"
+[release]
+changes_datetime_format = "not a datetime"
+...
+
+        my $workdir = $project->work_dir();
+        $workdir->build;
+
+        {
+            my $guard = pushd($workdir->dir);
+            ok -f 'Changes', 'Exists Changes';
+            like slurp('Changes'), $datetime_regex, 'Custom format is used';
+        }
+    };
+
+    subtest 'normal case' => sub {
+        my $guard = pushd(tempdir(CLEANUP => 1));
+
+        my $project = create_project();
+
+        write_minil_toml('Acme-Foo');
+
+        my $workdir = $project->work_dir();
+        $workdir->build;
+
+        {
+            my $guard = pushd($workdir->dir);
+            ok -f 'Changes', 'Exists Changes';
+            unlike slurp('Changes'), $datetime_regex, 'Custom format not used';
+        }
+    };
+};
+
 done_testing;
 
 sub create_project {

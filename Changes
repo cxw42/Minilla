@@ -1,6 +1,7 @@
 Revision history for Perl extension Minilla
 
 {{$NEXT}}
+    - Support custom date-time formats in the Changes file (#261)
 
 v3.1.4 2018-12-30T05:46:15Z
     - Support travis-ci.com badge (#253)

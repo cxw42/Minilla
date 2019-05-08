@@ -165,9 +165,15 @@ sub build {
 sub _rewrite_changes {
     my $self = shift;
 
+    # NOTE: Duplicates Minilla::Release::RewriteChanges::run()
+    my $strftime_format =
+        ($self->project->config->{release} &&
+        $self->project->config->{release}->{changes_datetime_format}) ||
+    '%Y-%m-%dT%H:%M:%SZ';
+
     my $orig = slurp_raw('Changes');
     $orig =~ s!\{\{\$NEXT\}\}!
-        $self->project->version . ' ' . $self->changes_time->strftime('%Y-%m-%dT%H:%M:%SZ')
+        $self->project->version . ' ' . $self->changes_time->strftime($strftime_format)
     !e;
     spew_raw('Changes', $orig);
 }
