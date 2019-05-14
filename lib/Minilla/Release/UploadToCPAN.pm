@@ -30,20 +30,26 @@ sub run {
             :                                                 undef;
         my $config = CPAN::Uploader->read_config_file($pause_config);
 
-        if(!$config->{password}) {  # Prompt for password if not in .pause
-            die <<EOF unless eval { require Term::ReadKey; 1 };
+        if(!$config->{password} && -t STDIN && -t STDOUT) {
+            # Prompt for password if not in .pause
+            eval {
+                require Term::ReadKey;
+                # Prompt for the password.
+                # The following is from CPAN-Uploader's cpan-upload script.
+                local $| = 1;
+                print "PAUSE Password (don't worry - we're not uploading yet): ";
+                Term::ReadKey::ReadMode('noecho');
+                $config->{password} = <STDIN>;
+                chomp $config->{password} if defined $config->{password};
+                Term::ReadKey::ReadMode('restore');
+                print "\n";
+            };
+
+            if($@) { die <<EOF }
 Your password is not in the ~/.pause file, and I can't prompt you for it.
-Please install the Term::ReadKey module and try again.
+Please install the Term::ReadKey module if it isn't already, and try again.
 EOF
-            # Prompt for the password.
-            # The following is from CPAN-Uploader's cpan-upload script.
-            local $| = 1;
-            print "PAUSE Password: ";
-            Term::ReadKey::ReadMode('noecho');
-            $config->{password} = <STDIN>;
-            chomp $config->{password} if defined $config->{password};
-            Term::ReadKey::ReadMode('restore');
-            print "\n";
+
         }
 
         if (!$config || !$config->{user} || !$config->{password}) {
@@ -59,8 +65,16 @@ You should put ~/.pause file in following format.
 EOF
         }
 
+        if ($opts->{trial}) {
+            my $orig_file = $tar;
+            $tar =~ s/\.(tar\.gz|tgz|tar.bz2|tbz|zip)$/-TRIAL.$1/
+            or die "Distfile doesn't match supported archive format: $orig_file";
+            infof("renaming $orig_file -> $tar for TRIAL release\n");
+            rename $orig_file, $tar or errorf("Renaming $orig_file -> $tar failed: $!\n");
+        }
+
         PROMPT: while (1) {
-            my $answer = prompt("Release to " . ($config->{upload_uri} || 'CPAN') . ' ? [y/n] ');
+            my $answer = prompt("Release $tar to " . ($config->{upload_uri} || 'CPAN') . ' ? [y/n] ');
             if ($answer =~ /y/i) {
                 last PROMPT;
             } elsif ($answer =~ /n/i) {
@@ -68,14 +82,6 @@ EOF
             } else {
                 redo PROMPT;
             }
-        }
-
-        if ($opts->{trial}) {
-            my $orig_file = $tar;
-            $tar =~ s/\.(tar\.gz|tgz|tar.bz2|tbz|zip)$/-TRIAL.$1/
-            or die "Distfile doesn't match supported archive format: $orig_file";
-            infof("renaming $orig_file -> $tar for TRIAL release\n");
-            rename $orig_file, $tar or errorf("Renaming $orig_file -> $tar failed: $!\n");
         }
 
         my $uploader = CPAN::Uploader->new(+{
