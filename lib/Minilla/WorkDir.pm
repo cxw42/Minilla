@@ -50,6 +50,10 @@ has changes_time => (
     is => 'lazy',
 );
 
+has is_trial => (
+    is => 'rw',
+);
+
 no Moo;
 
 sub _build_changes_time { scalar(gmtime()) }
@@ -165,11 +169,13 @@ sub build {
 sub _rewrite_changes {
     my $self = shift;
 
-    my $orig = slurp_raw('Changes');
-    $orig =~ s!\{\{\$NEXT\}\}!
-        $self->project->version . ' ' . $self->changes_time->strftime('%Y-%m-%dT%H:%M:%SZ')
+    my $changes = slurp_raw('Changes');
+    $changes =~ s!\{\{\$NEXT\}\}!
+        $self->project->version . ' ' .
+        $self->changes_time->strftime('%Y-%m-%dT%H:%M:%SZ') .
+        ($self->is_trial ? ' (TRIAL RELEASE)' : '')
     !e;
-    spew_raw('Changes', $orig);
+    spew_raw('Changes', $changes);
 }
 
 sub _rewrite_pod {

@@ -10,7 +10,8 @@ sub run {
 
     local $ENV{RELEASE_TESTING} = 1;
     my $work_dir = $project->work_dir();
-    if ($work_dir->dist_test) {
+    $work_dir->is_trial(1) if $opts->{trial};
+    if ($work_dir->dist_test()) {
         # Failed.
         exit 1;
     }

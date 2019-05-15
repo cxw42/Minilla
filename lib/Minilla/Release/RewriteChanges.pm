@@ -10,11 +10,11 @@ sub run {
 
     my $content = slurp_raw('Changes');
     $content =~ s!\{\{\$NEXT\}\}!
-        "{{\$NEXT}}\n\n" . $project->version . " " . $project->work_dir->changes_time->strftime('%Y-%m-%dT%H:%M:%SZ')
+        "{{\$NEXT}}\n\n" . $project->version . ' ' .
+            $project->work_dir->changes_time->strftime('%Y-%m-%dT%H:%M:%SZ') .
+            ($opts->{trial} ? ' (TRIAL RELEASE)' : '')
     !e;
     spew_raw('Changes' => $content);
 }
 
-
 1;
-
