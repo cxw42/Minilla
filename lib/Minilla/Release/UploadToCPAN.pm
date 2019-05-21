@@ -40,8 +40,8 @@ sub run {
                 print "PAUSE Password (don't worry - we're not uploading yet): ";
                 Term::ReadKey::ReadMode('noecho');
                 $config->{password} = <STDIN>;
-                chomp $config->{password} if defined $config->{password};
                 Term::ReadKey::ReadMode('restore');
+                chomp $config->{password} if defined $config->{password};
                 print "\n";
             };
 
@@ -56,8 +56,10 @@ EOF
             die <<EOF
 
 I need a PAUSE username and password.
-Perhaps a missing ~/.pause file or your ~/.pause file is wrong?
-You should put ~/.pause file in following format.
+Perhaps:
+ - Missing ~/.pause file?
+ - ~/.pause file in the wrong format?
+   The format is:
 
     user {{YOUR_PAUSE_ID}}
     password {{YOUR_PAUSE_PASSWORD}}
