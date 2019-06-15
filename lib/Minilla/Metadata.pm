@@ -122,7 +122,7 @@ sub _build_authors {
         }gex;
 
         my @authors;
-        for (split /\n/, $author) {
+        for (split /\R/, $author) {
             chomp;
             next unless /\S/;
             push @authors, $_;
